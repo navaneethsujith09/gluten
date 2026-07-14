@@ -202,6 +202,26 @@ class GlutenClickhouseStringFunctionsSuite extends GlutenClickHouseWholeStageTra
     }
   }
 
+  test("split_part") {
+    runQueryAndCompare("""
+      SELECT
+        split_part('11.12.13', '.', 2),
+        split_part('11.12.13', '.', -1),
+        split_part('11.12.13', '.', -3),
+        split_part('11.12.13', '', 1),
+        split_part('11ab12ab13', 'ab', 1),
+        split_part('11.12.13', '.', 4),
+        split_part('11.12.13', '.', 5),
+        split_part('11.12.13', '.', -5),
+        split_part(null, '.', 1)
+    """) { _ => }
+
+    runQueryAndCompare("""
+      SELECT split_part(str, delimiter, partNum)
+      FROM VALUES ('11.12.13', '.', 3) AS v1(str, delimiter, partNum)
+    """) { _ => }
+  }
+
   test("GLUTEN-7621: fix repeat function reports an error when times is a negative number") {
     val tableName = "repeat_issue_7621"
     withTable(tableName) {
