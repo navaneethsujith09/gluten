@@ -48,7 +48,7 @@ public:
             else if (partNum == 0)
                 throwIf(partNum == 0, 'The index 0 is invalid. An index shall start from 1 or -1.')
             else if (empty(delim))
-                if (partNum == 1) str else ''
+                if (partNum == 1 || partNum == -1) str else ''
             else
                 arrayElement(splitByString(delim, str), partNum)
         */
@@ -65,6 +65,7 @@ public:
         const auto * empty_string_node = addColumnToActionsDAG(actions_dag, std::make_shared<DB::DataTypeString>(), "");
         const auto * zero_node = addColumnToActionsDAG(actions_dag, std::make_shared<DB::DataTypeInt32>(), 0);
         const auto * one_node = addColumnToActionsDAG(actions_dag, std::make_shared<DB::DataTypeInt32>(), 1);
+        const auto * minus_one_node = addColumnToActionsDAG(actions_dag, std::make_shared<DB::DataTypeInt32>(), -1);
 
         const auto * equal_zero_node = toFunctionNode(actions_dag, "equals", {part_num_arg, zero_node});
         const auto * throw_message = addColumnToActionsDAG(
@@ -74,14 +75,16 @@ public:
         const auto * throw_if_node = toFunctionNode(actions_dag, "throwIf", {equal_zero_node, throw_message});
 
         const auto * empty_delim_node = toFunctionNode(actions_dag, "empty", {delim_arg});
+        // When delim is empty, Spark returns a single-element array [str], so only partNum 1 or -1 point to it.
         const auto * part_is_one_node = toFunctionNode(actions_dag, "equals", {part_num_arg, one_node});
-        const auto * empty_delim_part_one_node = toFunctionNode(actions_dag, "and", {empty_delim_node, part_is_one_node});
+        const auto * part_is_minus_one_node = toFunctionNode(actions_dag, "equals", {part_num_arg, minus_one_node});
+        const auto * part_is_first_node = toFunctionNode(actions_dag, "or", {part_is_one_node, part_is_minus_one_node});
 
         const auto * split_node = toFunctionNode(actions_dag, "splitByString", {delim_arg, str_arg});
         const auto * array_element_node = toFunctionNode(actions_dag, "arrayElement", {split_node, part_num_arg});
 
         const auto * empty_delim_result_node
-            = toFunctionNode(actions_dag, "if", {empty_delim_part_one_node, str_arg, empty_string_node});
+            = toFunctionNode(actions_dag, "if", {part_is_first_node, str_arg, empty_string_node});
         const auto * non_null_result_node
             = toFunctionNode(actions_dag, "if", {empty_delim_node, empty_delim_result_node, array_element_node});
         const auto * result_with_throw_node
