@@ -1,6 +1,6 @@
 # Scalar Functions Support Status
 
-**Out of 357 scalar functions in Spark 3.5, Gluten currently fully supports 242 functions and partially supports 25 functions.**
+**Out of 357 scalar functions in Spark 3.5, Gluten currently fully supports 245 functions and partially supports 28 functions.**
 
 ## Array Functions
 
@@ -220,6 +220,7 @@
 
 ## Mathematical Functions
 
+
 | Spark Functions   | Spark Expressions      | Status   | Restrictions   |
 |-------------------|------------------------|----------|----------------|
 | %                 | Remainder              | S        |                |
@@ -281,8 +282,8 @@
 | sin               | Sin                    |          |                |
 | sinh              | Sinh                   | S        |                |
 | sqrt              | Sqrt                   | S        |                |
-| tan               | Tan                    |          |                |
-| tanh              | Tanh                   |          |                |
+| tan               | Tan                    | S        |                |
+| tanh              | Tanh                   | S        |                |
 | try_add           | TryAdd                 | PS       |                |
 | try_divide        | TryDivide              |          |                |
 | try_multiply      | TryMultiply            |          |                |
@@ -369,7 +370,7 @@
 | encode             | Encode                      |          |                                                         |
 | endswith           | EndsWithExpressionBuilder   | PS       | BinaryType unsupported                                  |
 | find_in_set        | FindInSet                   | S        |                                                         |
-| format_number      | FormatNumber                |          |                                                         |
+| format_number      | FormatNumber                | PS       | format_number only supports tinyint, smallint, integer, bigint, float and double input; DecimalType input is not supported in Velox<br>format_number with a string format argument (e.g. '#,###.##') is not supported in Velox; only an integer number of decimal places is supported |
 | format_string      | FormatString                |          |                                                         |
 | initcap            | InitCap                     | S        |                                                         |
 | instr              | StringInstr                 | S        |                                                         |
@@ -391,7 +392,7 @@
 | regexp_count       | RegExpCount                 |          |                                                         |
 | regexp_extract     | RegExpExtract               | PS       | Lookaround unsupported                                  |
 | regexp_extract_all | RegExpExtractAll            | PS       | Lookaround unsupported                                  |
-| regexp_instr       | RegExpInStr                 |          |                                                         |
+| regexp_instr       | RegExpInStr                 | PS       | Lookaround unsupported, group index ignored             |
 | regexp_replace     | RegExpReplace               | PS       | Lookaround unsupported                                  |
 | regexp_substr      | RegExpSubStr                |          |                                                         |
 | repeat             | StringRepeat                | S        |                                                         |

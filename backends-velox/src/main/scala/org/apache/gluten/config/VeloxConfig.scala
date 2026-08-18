@@ -109,6 +109,12 @@ class VeloxConfig(conf: SQLConf) extends GlutenConfig(conf) {
   def valueStreamDynamicFilterEnabled: Boolean =
     getConf(VALUE_STREAM_DYNAMIC_FILTER_ENABLED)
 
+  def hashProbeBloomFilterBypassMinRows: Int = getConf(HASH_PROBE_BLOOM_FILTER_BYPASS_MIN_ROWS)
+
+  def hashProbeBloomFilterBypassMinPct: Int = getConf(HASH_PROBE_BLOOM_FILTER_BYPASS_MIN_PCT)
+
+  def scanBloomFilterPushdownEnabled: Boolean = getConf(SCAN_BLOOM_FILTER_PUSHDOWN_ENABLED)
+
   def enableTimestampNtzValidation: Boolean = getConf(ENABLE_TIMESTAMP_NTZ_VALIDATION)
 
   def enableDriverSideBroadcastHashTableBuild: Boolean =
@@ -529,6 +535,29 @@ object VeloxConfig extends ConfigRegistry {
       .booleanConf
       .createWithDefault(false)
 
+  val HASH_PROBE_BLOOM_FILTER_BYPASS_MIN_ROWS =
+    buildConf("spark.gluten.sql.columnar.backend.velox.hashProbe.bloomFilter.bypassMinRows")
+      .doc(
+        "Number of probe rows used to decide whether to bypass the build-side Bloom filter " +
+          "for left outer, existence, and left anti joins.")
+      .intConf
+      .checkValue(_ >= 0, "The minimum number of rows must not be negative")
+      .createWithDefault(0)
+
+  val HASH_PROBE_BLOOM_FILTER_BYPASS_MIN_PCT =
+    buildConf("spark.gluten.sql.columnar.backend.velox.hashProbe.bloomFilter.bypassMinPct")
+      .doc(
+        "Bypass the build-side Bloom filter when its acceptance percentage reaches this value.")
+      .intConf
+      .checkValue(value => value >= 0 && value <= 100, "The percentage must be in [0, 100]")
+      .createWithDefault(85)
+
+  val SCAN_BLOOM_FILTER_PUSHDOWN_ENABLED =
+    buildStaticConf("spark.gluten.sql.columnar.backend.velox.scan.bloomFilterPushdown.enabled")
+      .doc("Whether to push Bloom filters into Velox scans.")
+      .booleanConf
+      .createWithDefault(false)
+
   val COLUMNAR_VELOX_FILE_HANDLE_CACHE_ENABLED =
     buildStaticConf("spark.gluten.sql.columnar.backend.velox.fileHandleCacheEnabled")
       .doc(
@@ -822,7 +851,7 @@ object VeloxConfig extends ConfigRegistry {
       .createWithDefault(false)
 
   val CUDF_ENABLE_VALIDATION =
-    buildStaticConf("spark.gluten.sql.columnar.backend.velox.cudf.enableValidation")
+    buildConf("spark.gluten.sql.columnar.backend.velox.cudf.enableValidation")
       .doc(
         "Heuristics you can apply to validate a cuDF/GPU plan and only offload when " +
           "the entire stage can be fully and profitably executed on GPU")
